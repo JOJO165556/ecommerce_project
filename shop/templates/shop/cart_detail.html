@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 class="text-3xl font-bold mb-8">Votre Panier</h1>
+
+<div class="bg-white shadow-md rounded-lg p-6">
+    {% if cart %}
+    <table class="w-full text-left border-collapse">
+        <thead>
+            <tr class="border-b text-gray-600">
+                <th class="py-4">Produit</th>
+                <th class="py-4">Quantité</th>
+                <th class="py-4">Prix Unitaire</th>
+                <th class="py-4">Total</th>
+                <th class="py-4">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in cart %}
+            <tr class="border-b hover:bg-gray-50">
+                <td class="py-4">
+                    <span class="font-semibold text-gray-800">{{ item.product.name }}</span>
+                </td>
+                <td class="py-4">{{ item.quantity }}</td>
+                <td class="py-4">{{ item.price }} FCFA</td>
+                <td class="py-4 font-bold text-blue-600">
+                    {{ item.total_price }} FCFA
+                </td>
+                <td class="py-4">
+                    <a href="{% url 'cart_remove' item.product.id %}" class="text-red-500 hover:text-red-700 text-sm font-medium">
+                        Supprimer
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="mt-8 text-right">
+        <p class="text-xl text-gray-700">Total Global: <span class="font-bold text-3xl text-blue-800">{{ cart.get_total_price }} FCFA</span></p>
+        
+        {% if user.is_authenticated %}
+            {% if not user.is_staff %}
+                <a href="{% url 'checkout' %}"
+                    class="mt-4 inline-block bg-green-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-green-700 shadow-lg transition">
+                    Valider la commande
+                </a>
+            {% else %}
+                <p class="mt-4 text-orange-600 italic">Mode Admin : Vous ne pouvez pas valider d'achat.</p>
+            {% endif %}
+        {% else %}
+            <div class="mt-4">
+                <p class="text-sm text-gray-500 mb-2">Connectez-vous pour finaliser l'achat</p>
+                <a href="{% url 'login' %}" class="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-700 transition">
+                    Se connecter
+                </a>
+            </div>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="text-center py-10">
+        <p class="text-gray-500 mb-4">Votre panier est vide.</p>
+        <a href="{% url 'home' %}" class="text-blue-600 font-bold hover:underline">← Retour à la boutique</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

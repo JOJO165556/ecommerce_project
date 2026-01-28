@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiniShop | Django Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-slate-50 flex flex-col min-h-screen">
+    
+    <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-gray-100">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="/" class="text-2xl font-extrabold text-blue-600 tracking-tighter">MINISHOP.</a>
+
+            <div class="flex items-center space-x-6">
+                <a href="/" class="text-gray-600 hover:text-blue-600 font-semibold transition">Boutique</a>
+
+                {% if user.is_authenticated %}
+                    <a href="{% url 'user_board' %}" class="text-gray-600 hover:text-blue-600 font-semibold transition">Commandes</a>
+                    
+                    {% if not user.is_staff %}
+                    <a href="{% url 'cart_detail' %}" class="flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition shadow-md">
+                        <span class="font-bold text-sm">Poursuivre l'achat</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                    {% endif %}
+
+                    <form action="{% url 'logout' %}" method="POST" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="text-sm font-bold text-red-500 hover:underline px-2 transition">Déconnexion</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}" class="text-gray-600 font-bold">Connexion</a>
+                    <a href="{% url 'register' %}" class="bg-gray-900 text-white px-6 py-2 rounded-xl font-bold hover:bg-black transition shadow-xl">S'inscrire</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    {% if messages %}
+    <div id="msg-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+        {% for message in messages %}
+        <div class="message-item p-4 rounded-xl shadow-2xl text-white font-bold bg-gray-800 border-l-4 {% if message.tags == 'success' %}border-emerald-500{% else %}border-blue-500{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <main class="container mx-auto px-6 py-12 flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-gray-800 text-gray-300 py-6 text-center">
+        <p>&copy; 2026 MiniShop - Projet Django Monolithe</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const messages = document.querySelectorAll('.message-item');
+                messages.forEach(msg => {
+                    msg.style.transition = "opacity 0.6s ease, transform 0.6s ease";
+                    msg.style.opacity = "0";
+                    msg.style.transform = "translateX(20px)";
+                    setTimeout(() => msg.remove(), 600);
+                });
+            }, 3000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md border border-gray-100">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">
+            {% if edit_mode %}Modifier le produit{% else %}Ajouter un nouveau produit{% endif %}
+        </h1>
+        <p class="text-gray-500 text-sm">Remplissez les informations ci-dessous pour mettre à jour le catalogue.</p>
+    </div>
+    
+    <form method="POST" class="space-y-2">
+        {% csrf_token %}
+        {{ form.as_p }}
+        
+        <div class="pt-4">
+            <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition shadow-lg">
+                {% if edit_mode %}Enregistrer les modifications{% else %}Créer le produit{% endif %}
+            </button>
+        </div>
+    </form>
+    
+    <a href="{% url 'home' %}" class="block text-center text-gray-400 mt-6 hover:text-gray-600 transition underline text-sm">
+        Retour à la boutique
+    </a>
+</div>
+{% endblock %}
