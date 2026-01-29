@@ -30,20 +30,23 @@ def register_view(request):
 
 # Gestion Panier
 def cart_add(request, product_id):
-    if request.user.is_authenticated and request.user.is_staff:
-        messages.error(request, "L'admin ne peut pas commander.")
+    # 1. On bloque l'anonyme immédiatement
+    if not request.user.is_authenticated:
+        messages.error(request, "Veuillez vous connecter pour commencer vos achats.")
+        return redirect('login')
+    
+    # 2. On bloque l'admin
+    if request.user.is_staff:
+        messages.error(request, "L'administrateur ne peut pas effectuer d'achats.")
         return redirect('home')
     
     cart = Cart(request)
     product = get_object_or_404(Product, id=product_id)
-    
-    # On récupère la quantité depuis le formulaire (par défaut 1)
     quantity = int(request.POST.get('quantity', 1))
     
     cart.add(product=product, quantity=quantity)
-    messages.success(request, f"{quantity} x {product.name} ajouté(s) au panier.")
+    messages.success(request, f"{product.name} ajouté au panier.")
     
-    # Redirige vers la page précédente au lieu du panier
     return redirect(request.META.get('HTTP_REFERER', 'home'))
 
 @login_required
@@ -98,22 +101,42 @@ def update_order_status(request, order_id, new_status):
         order.save()
     return redirect('user_board')
 
-@login_required
 def checkout(request):
-    if request.user.is_staff: return redirect('home')
+    # 1. Vérification de la connexion avec message personnalisé
+    if not request.user.is_authenticated:
+        messages.error(request, "Veuillez vous connecter pour finaliser votre commande.")
+        return redirect('login') 
+
+    # 2. Sécurité pour l'admin
+    if request.user.is_staff: 
+        messages.warning(request, "Les administrateurs ne peuvent pas passer de commandes.")
+        return redirect('home')
+        
     cart = Cart(request)
-    if len(cart) == 0: return redirect('home')
+    if len(cart) == 0: 
+        messages.error(request, "Votre panier est vide.")
+        return redirect('home')
+
     try:
         with transaction.atomic():
             order = Order.objects.create(user=request.user, total_price=cart.get_total_price())
             for item in cart:
                 product = item['product']
-                if product.stock < item['quantity']: raise Exception(f"Stock épuisé pour {product.name}")
-                OrderItem.objects.create(order=order, product=product, price=item['price'], quantity=item['quantity'])
+                if product.stock < item['quantity']: 
+                    raise Exception(f"Stock épuisé pour {product.name}")
+                
+                OrderItem.objects.create(
+                    order=order, 
+                    product=product, 
+                    price=item['price'], 
+                    quantity=item['quantity']
+                )
                 product.stock -= item['quantity']
                 product.save()
+            
             cart.clear()
             return render(request, 'shop/order_success.html', {'order': order})
+            
     except Exception as e:
         messages.error(request, str(e))
         return redirect('cart_detail')
